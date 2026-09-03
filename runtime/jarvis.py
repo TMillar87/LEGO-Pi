@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import subprocess
 
-from .config import CAPABILITIES_RESPONSE
+from .config import CAPABILITIES_RESPONSE, LIVE_PORT
 from .intent import route
 from .mode import mode, set_demo
 from .tts import speak
@@ -98,6 +98,9 @@ def dispatch(text: str) -> None:
 
 
 def _post(path: str) -> None:
-    result = subprocess.run(["curl", "-s", "--max-time", "35", "-X", "POST", f"http://127.0.0.1:5000{path}"], capture_output=True, text=True, check=False)
+    # 127.0.0.1 is intentional here (jarvis-full.py and the live server are always the
+    # same machine) even though the server itself binds LIVE_HOST, which defaults to
+    # 0.0.0.0 and is not a valid address to connect back to.
+    result = subprocess.run(["curl", "-s", "--max-time", "35", "-X", "POST", f"http://127.0.0.1:{LIVE_PORT}{path}"], capture_output=True, text=True, check=False)
     if result.stdout:
         print(result.stdout.strip(), flush=True)

@@ -4,7 +4,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from .config import ELEVENLABS_ENV, TTS_SCRIPT
+from .config import ELEVENLABS_ENV, TTS_SCRIPT, VENV_PYTHON
 
 
 def load_env_file(path: Path) -> dict[str, str]:
@@ -25,7 +25,7 @@ def speak(text: str, wait: bool = True) -> None:
     text = str(text).strip()
     if not text:
         return
-    cmd = ["/home/ty/legopi-venv/bin/python", str(TTS_SCRIPT), text]
+    cmd = [str(VENV_PYTHON), str(TTS_SCRIPT), text]
     if wait:
         subprocess.run(cmd, env=load_env_file(ELEVENLABS_ENV), check=False)
     else:

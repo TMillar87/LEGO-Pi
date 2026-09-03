@@ -5,8 +5,6 @@ therefore never points an inventory mutation at the real inventory database.
 """
 from __future__ import annotations
 
-import json
-import os
 import shutil
 import sqlite3
 from pathlib import Path
@@ -15,7 +13,9 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from runtime.config import DEMO_CATALOG_DB, DEMO_INVENTORY_DB, DEMO_STATE_FILE, REAL_CATALOG_DB, REAL_INVENTORY_DB
+from runtime.config import DEMO_CATALOG_DB, DEMO_INVENTORY_DB, REAL_CATALOG_DB
+from runtime.db_paths import catalog_db_path, inventory_db_path
+from runtime.mode import enabled as demo_enabled, mode as get_mode, set_demo  # noqa: F401  (re-exported for API compatibility)
 
 SEED_INVENTORY = [
     ("3001", "Brick 2 x 4", 4, "Red", 12, "U01-D01-Y01-X01"),
@@ -30,46 +30,13 @@ SEED_INVENTORY = [
 ]
 
 
-def load_state() -> dict:
-    try:
-        with DEMO_STATE_FILE.open(encoding="utf-8") as f:
-            state = json.load(f)
-        if isinstance(state, dict):
-            return {"enabled": bool(state.get("enabled", False)), "session": state.get("session")}
-    except (OSError, json.JSONDecodeError):
-        pass
-    return {"enabled": False, "session": None}
-
-
-def save_state(state: dict) -> None:
-    DEMO_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    tmp = DEMO_STATE_FILE.with_suffix(".tmp")
-    with tmp.open("w", encoding="utf-8") as f:
-        json.dump(state, f, indent=2)
-        f.write("\n")
-    os.replace(tmp, DEMO_STATE_FILE)
-
-
-def demo_enabled() -> bool:
-    return bool(load_state()["enabled"])
-
-
-def get_mode() -> str:
-    return "DEMO" if demo_enabled() else "NORMAL"
-
-
 def enable_demo() -> bool:
-    state = load_state()
-    state["enabled"] = True
-    save_state(state)
+    set_demo(True)
     return True
 
 
 def disable_demo() -> bool:
-    state = load_state()
-    state["enabled"] = False
-    state["session"] = None
-    save_state(state)
+    set_demo(False)
     return True
 
 
@@ -101,11 +68,12 @@ def _reset_inventory() -> None:
 
 
 def _reset_catalog() -> None:
-    if not REAL_CATALOG_DB.exists():
-        return
     # A demo catalog is a private copy. It may contain the public Rebrickable catalog but
     # never writes back to the real catalog. We clear the user's owned-set/session state.
     if not DEMO_CATALOG_DB.exists():
+        if not REAL_CATALOG_DB.exists():
+            # Nothing to reset and no catalog to bootstrap a demo copy from yet.
+            return
         shutil.copy2(REAL_CATALOG_DB, DEMO_CATALOG_DB)
     con = sqlite3.connect(DEMO_CATALOG_DB)
     try:
@@ -130,16 +98,12 @@ def _reset_catalog() -> None:
 def reset_demo() -> bool:
     _reset_inventory()
     _reset_catalog()
-    save_state({"enabled": False, "session": None})
+    set_demo(False)
     return True
 
 
-def get_inventory_db():
-    return DEMO_INVENTORY_DB if demo_enabled() else REAL_INVENTORY_DB
-
-
-def get_catalog_db():
-    return DEMO_CATALOG_DB if demo_enabled() else REAL_CATALOG_DB
+get_inventory_db = inventory_db_path
+get_catalog_db = catalog_db_path
 
 
 if __name__ == "__main__":

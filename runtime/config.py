@@ -17,6 +17,8 @@ DEMO_STATE_FILE = Path(os.getenv("LEGOPI_DEMO_STATE", REPO / "demo/demo_state.js
 OPENAI_ENV = Path(os.getenv("LEGOPI_OPENAI_ENV", HOME / ".config/legopi/openai.env"))
 ELEVENLABS_ENV = Path(os.getenv("LEGOPI_ELEVENLABS_ENV", HOME / ".config/legopi/elevenlabs.env"))
 
+VENV_PYTHON = Path(os.getenv("LEGOPI_VENV_PYTHON", HOME / "legopi-venv/bin/python"))
+
 OLLAMA_URL = os.getenv("LEGOPI_OLLAMA_URL", "http://127.0.0.1:11434")
 OLLAMA_MODEL = os.getenv("LEGOPI_OLLAMA_MODEL", "qwen2.5:1.5b")
 # Common commands never wait on Ollama. This timeout only applies to ambiguous commands.

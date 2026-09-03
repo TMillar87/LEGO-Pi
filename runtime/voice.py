@@ -17,6 +17,7 @@ from .config import (
     COMMAND_MAX_SECONDS,
     COMMAND_SILENCE_SECONDS,
     STT_RATE,
+    VENV_PYTHON,
     VOSK_MODEL_PATH,
     WAKE_MODEL_PATH,
     WAKE_THRESHOLD,
@@ -128,7 +129,7 @@ print(result.text.strip())
 """
         started = time.monotonic()
         result = subprocess.run(
-            ["/home/ty/legopi-venv/bin/python", "-c", code],
+            [str(VENV_PYTHON), "-c", code],
             capture_output=True,
             text=True,
             timeout=20,

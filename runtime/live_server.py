@@ -3,7 +3,6 @@ from __future__ import annotations
 import base64
 import os
 import sqlite3
-import subprocess
 import threading
 import time
 from typing import Any
@@ -15,11 +14,10 @@ from flask import Flask, Response, jsonify, send_file
 from openai import OpenAI
 from picamera2 import Picamera2
 
-from .config import CAMERA_FPS, CAMERA_HEIGHT, CAMERA_WIDTH, LIVE_HOST, LIVE_PORT, TTS_SCRIPT
+from .config import CAMERA_FPS, CAMERA_HEIGHT, CAMERA_WIDTH, LIVE_HOST, LIVE_PORT
 from .db_paths import inventory_db_path
 from .mode import mode
-from .tts import load_env_file
-from .config import ELEVENLABS_ENV
+from .tts import speak
 
 app = Flask(__name__)
 client = OpenAI()
@@ -46,6 +44,11 @@ time.sleep(1)
 
 frame_lock = threading.Lock()
 latest_frame: np.ndarray | None = None
+# Serializes access to the picam2 object itself, distinct from frame_lock which only
+# protects the cached latest_frame array. Needed because _capture_loop's capture_array()
+# and the /camera-metadata route's capture_metadata() both call into the same Picamera2
+# instance from different threads.
+picam2_lock = threading.Lock()
 
 COLOR_REFERENCES = {
     "red": ("sat", (171.0, 143.0, 187.0)),
@@ -93,7 +96,8 @@ def _capture_loop():
     global latest_frame
     while True:
         try:
-            frame = picam2.capture_array()
+            with picam2_lock:
+                frame = picam2.capture_array()
             with frame_lock:
                 latest_frame = frame.copy()
         except Exception as exc:
@@ -119,10 +123,7 @@ def _encode_frame(frame):
 
 
 def _speak_async(text: str):
-    env = load_env_file(ELEVENLABS_ENV)
-    subprocess.Popen([
-        "/home/ty/legopi-venv/bin/python", str(TTS_SCRIPT), str(text)
-    ], env=env)
+    speak(str(text), wait=False)
 
 
 def _brickognize(frame):
@@ -419,7 +420,8 @@ def color_sample():
 
 @app.route("/camera-metadata")
 def camera_metadata():
-    m = picam2.capture_metadata()
+    with picam2_lock:
+        m = picam2.capture_metadata()
     gains = m.get("ColourGains")
     return jsonify({"colour_gains":list(gains) if gains else None,"colour_temperature":m.get("ColourTemperature"),"exposure_time":m.get("ExposureTime"),"analogue_gain":m.get("AnalogueGain")})
 
