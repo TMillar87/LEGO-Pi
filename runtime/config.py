@@ -63,6 +63,12 @@ STT_RATE = 16000
 BLOCK_SIZE = 3840
 COMMAND_MAX_SECONDS = 6.0
 COMMAND_SILENCE_SECONDS = 0.75
+# Fraction of full-scale amplitude (0-1) treated as "someone is talking" while recording
+# a command, checked against the input stream's actual sample width rather than a raw
+# number, so it can't silently drift out of scale if the capture format ever changes.
+# Tune this per-mic using the same peak/rms numbers `arecord -V stereo` or a quick
+# sounddevice test shows you for a few seconds of silence vs. a few seconds of talking.
+COMMAND_SPEECH_LEVEL = float(os.getenv("LEGOPI_COMMAND_SPEECH_LEVEL", "0.001"))
 
 VOLUME_COMMAND = os.getenv("LEGOPI_VOLUME_COMMAND", "/usr/local/bin/legopi-volume")
 TTS_SCRIPT = Path(os.getenv("LEGOPI_TTS_SCRIPT", HOME / "elevenlabs-speak-final.py"))

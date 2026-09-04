@@ -16,6 +16,7 @@ from .config import (
     CAPTURE_RATE,
     COMMAND_MAX_SECONDS,
     COMMAND_SILENCE_SECONDS,
+    COMMAND_SPEECH_LEVEL,
     STT_RATE,
     VENV_PYTHON,
     VOSK_MODEL_PATH,
@@ -23,6 +24,11 @@ from .config import (
     WAKE_THRESHOLD,
 )
 from .intent import normalize
+
+# record_command() opens its InputStream as dtype="int32"; the speech-detection
+# threshold is expressed as a fraction of that dtype's full range so it stays correct
+# regardless of the capture format, instead of an unscaled magic number.
+_COMMAND_RMS_THRESHOLD = COMMAND_SPEECH_LEVEL * np.iinfo(np.int32).max
 
 
 def resample_to_16khz(audio: np.ndarray) -> np.ndarray:
@@ -86,9 +92,9 @@ class VoiceEngine:
                 if overflowed:
                     print("COMMAND AUDIO OVERFLOW", flush=True)
                 chunks.append(audio.copy())
-                mono = audio[:, 0].astype(np.float32)
+                mono = audio[:, 0].astype(np.float64)
                 rms = float(np.sqrt(np.mean(mono * mono)))
-                if rms > 120:
+                if rms > _COMMAND_RMS_THRESHOLD:
                     heard_speech = True
                     silent_since = None
                 elif heard_speech:
