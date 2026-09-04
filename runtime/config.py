@@ -33,6 +33,11 @@ LIVE_PORT = int(os.getenv("LEGOPI_LIVE_PORT", "5000"))
 CAMERA_WIDTH = int(os.getenv("LEGOPI_CAMERA_WIDTH", "1280"))
 CAMERA_HEIGHT = int(os.getenv("LEGOPI_CAMERA_HEIGHT", "720"))
 CAMERA_FPS = int(os.getenv("LEGOPI_CAMERA_FPS", "20"))
+# Corrects for the camera being physically mounted rotated (e.g. to fit inside an
+# enclosure). One of: none, 90_cw, 90_ccw, 180. Applied in software after every capture,
+# so it affects the live view and everything derived from it (scan, vision, color
+# classification) identically.
+CAMERA_ROTATE = os.getenv("LEGOPI_CAMERA_ROTATE", "none")
 
 WAKE_THRESHOLD = float(os.getenv("LEGOPI_WAKE_THRESHOLD", "0.80"))
 WAKE_MODEL_PATH = Path(os.getenv(

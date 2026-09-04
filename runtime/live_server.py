@@ -14,7 +14,7 @@ from flask import Flask, Response, jsonify, send_file
 from openai import OpenAI
 from picamera2 import Picamera2
 
-from .config import CAMERA_FPS, CAMERA_HEIGHT, CAMERA_WIDTH, LIVE_HOST, LIVE_PORT
+from .config import CAMERA_FPS, CAMERA_HEIGHT, CAMERA_ROTATE, CAMERA_WIDTH, LIVE_HOST, LIVE_PORT
 from .db_paths import inventory_db_path
 from .mode import mode
 from .tts import speak
@@ -41,6 +41,18 @@ except Exception:
     # Some camera/tuning combinations do not expose every focus control. The stream still works.
     pass
 time.sleep(1)
+
+_ROTATE_CODES = {
+    "none": None,
+    "90_cw": cv2.ROTATE_90_CLOCKWISE,
+    "90_ccw": cv2.ROTATE_90_COUNTERCLOCKWISE,
+    "180": cv2.ROTATE_180,
+}
+if CAMERA_ROTATE not in _ROTATE_CODES:
+    raise ValueError(
+        f"LEGOPI_CAMERA_ROTATE={CAMERA_ROTATE!r} is not valid; use one of {sorted(_ROTATE_CODES)}"
+    )
+_rotate_code = _ROTATE_CODES[CAMERA_ROTATE]
 
 frame_lock = threading.Lock()
 latest_frame: np.ndarray | None = None
@@ -98,6 +110,8 @@ def _capture_loop():
         try:
             with picam2_lock:
                 frame = picam2.capture_array()
+            if _rotate_code is not None:
+                frame = cv2.rotate(frame, _rotate_code)
             with frame_lock:
                 latest_frame = frame.copy()
         except Exception as exc:
