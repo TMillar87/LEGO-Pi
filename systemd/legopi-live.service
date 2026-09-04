@@ -9,6 +9,7 @@ User=ty
 WorkingDirectory=/home/ty
 EnvironmentFile=-/home/ty/.config/legopi/openai.env
 EnvironmentFile=-/home/ty/.config/legopi/elevenlabs.env
+EnvironmentFile=-/home/ty/.config/legopi/runtime.env
 ExecStart=/home/ty/legopi-venv/bin/python /home/ty/legopi-live-server-final.py
 Restart=on-failure
 RestartSec=3
