@@ -39,6 +39,18 @@ CAMERA_FPS = int(os.getenv("LEGOPI_CAMERA_FPS", "20"))
 # classification) identically.
 CAMERA_ROTATE = os.getenv("LEGOPI_CAMERA_ROTATE", "none")
 
+# Some third-party camera modules (e.g. Arducam's IMX519) get center-cropped by libcamera
+# when a small output size is requested, instead of using the full sensor and scaling
+# down. Set to the sensor's native resolution as "WIDTHxHEIGHT" (e.g. "4656x3496" for
+# IMX519) to force Picamera2 to read the whole sensor. Leave unset to keep Picamera2's
+# automatic mode selection (correct for the official Raspberry Pi camera modules).
+_sensor_size_raw = os.getenv("LEGOPI_CAMERA_SENSOR_SIZE", "").strip().lower()
+if _sensor_size_raw:
+    _sensor_w, _sensor_h = _sensor_size_raw.split("x")
+    CAMERA_SENSOR_SIZE: tuple[int, int] | None = (int(_sensor_w), int(_sensor_h))
+else:
+    CAMERA_SENSOR_SIZE = None
+
 WAKE_THRESHOLD = float(os.getenv("LEGOPI_WAKE_THRESHOLD", "0.80"))
 WAKE_MODEL_PATH = Path(os.getenv(
     "LEGOPI_WAKE_MODEL",

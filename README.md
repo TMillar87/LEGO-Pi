@@ -131,6 +131,7 @@ variables (see `config/runtime.env.example`):
 | `LEGOPI_LIVE_HOST` / `LEGOPI_LIVE_PORT` | `0.0.0.0` / `5000` | Flask camera/vision server bind address |
 | `LEGOPI_CAMERA_WIDTH` / `HEIGHT` / `FPS` | `1280` / `720` / `20` | Camera capture configuration |
 | `LEGOPI_CAMERA_ROTATE` | `none` | Corrects the live feed/scan/vision frames for a physically rotated camera mount. One of `none`, `90_cw`, `90_ccw`, `180` |
+| `LEGOPI_CAMERA_SENSOR_SIZE` | unset | Third-party camera's native resolution as `WIDTHxHEIGHT` (e.g. `4656x3496` for the Arducam IMX519), forcing full field of view instead of a center crop |
 | `LEGOPI_WAKE_THRESHOLD` | `0.80` | openWakeWord confidence threshold |
 | `LEGOPI_WAKE_MODEL` | bundled `hey_jarvis_v0.1.onnx` path | Wake-word model path |
 | `LEGOPI_AUDIO_DEVICE` | `0` | ALSA input device index/name for the microphone |

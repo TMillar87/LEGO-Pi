@@ -14,7 +14,15 @@ from flask import Flask, Response, jsonify, send_file
 from openai import OpenAI
 from picamera2 import Picamera2
 
-from .config import CAMERA_FPS, CAMERA_HEIGHT, CAMERA_ROTATE, CAMERA_WIDTH, LIVE_HOST, LIVE_PORT
+from .config import (
+    CAMERA_FPS,
+    CAMERA_HEIGHT,
+    CAMERA_ROTATE,
+    CAMERA_SENSOR_SIZE,
+    CAMERA_WIDTH,
+    LIVE_HOST,
+    LIVE_PORT,
+)
 from .db_paths import inventory_db_path
 from .mode import mode
 from .tts import speak
@@ -23,10 +31,15 @@ app = Flask(__name__)
 client = OpenAI()
 
 picam2 = Picamera2()
-config = picam2.create_video_configuration(
+_video_config_kwargs = dict(
     main={"size": (CAMERA_WIDTH, CAMERA_HEIGHT), "format": "RGB888"},
     controls={"FrameRate": CAMERA_FPS, "AfMode": 2},
 )
+if CAMERA_SENSOR_SIZE is not None:
+    # Forces the ISP to read the full sensor and scale down to `main`, instead of
+    # picking a mode that only reads out a center crop at the requested resolution.
+    _video_config_kwargs["sensor"] = {"output_size": CAMERA_SENSOR_SIZE}
+config = picam2.create_video_configuration(**_video_config_kwargs)
 picam2.configure(config)
 picam2.start()
 time.sleep(1)
