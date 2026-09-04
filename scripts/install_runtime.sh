@@ -17,7 +17,7 @@ LIVE_CATALOG="$REPO/data/db/legopi.sqlite3"
 [ -f "$LIVE_CATALOG" ] && cp -a "$LIVE_CATALOG" "$BACKUP/live-legopi.sqlite3" || true
 rm -rf "$REPO"; mkdir -p "$REPO"; cp -a "$SRC/." "$REPO/"
 rm -f "$REPO/legopi-data/lego_inventory.db"
-[ -f "$BACKUP/live-legopi.sqlite3" ] && cp -a "$BACKUP/live-legopi.sqlite3" "$LIVE_CATALOG" || true
+[ -f "$BACKUP/live-legopi.sqlite3" ] && { mkdir -p "$(dirname "$LIVE_CATALOG")"; cp -a "$BACKUP/live-legopi.sqlite3" "$LIVE_CATALOG"; } || true
 cp "$SRC/jarvis-full.py" "$ROOT/jarvis-full.py"
 cp "$SRC/jarvis-intent-router.py" "$ROOT/jarvis-intent-router.py"
 cp "$SRC/legopi-live-server-final.py" "$ROOT/legopi-live-server-final.py"
